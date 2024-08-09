@@ -262,8 +262,10 @@ pyrightconfig.json
 
 # keys
 bremen_key_pem.pem
+chatbotviews.py
 
 # database
 mymodule/dbmodule/database.db
+
 
 # End of https://www.toptal.com/developers/gitignore/api/python,flask
