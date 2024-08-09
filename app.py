@@ -2,7 +2,9 @@ from flask import Flask, g, jsonify, request, Response
 import sqlite3
 import requests
 
-from myviews import requestviews, defaultviews, dbviews, chatbotviews
+from mymodule.dbmodule import dbviews
+from mymodule.aimodule import chatbotviews
+from myviews import requestviews, defaultviews
 
 app = Flask(__name__)
 app.register_blueprint(requestviews.request_bp)

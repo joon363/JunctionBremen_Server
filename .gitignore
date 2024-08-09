@@ -262,7 +262,6 @@ pyrightconfig.json
 
 # keys
 bremen_key_pem.pem
-chatbotviews.py
 
 # database
 mymodule/dbmodule/database.db
