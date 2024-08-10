@@ -28,4 +28,4 @@ def generate_answer():
           temperature=0.5
         )
         answer = response.choices[0].message.content.strip()
-        return jsonify({'answer': answer})
+        return jsonify({'answer': answer}, ensure_ascii=False)

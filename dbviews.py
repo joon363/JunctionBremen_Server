@@ -3,6 +3,7 @@ import os
 import json
 from datetime import datetime, timedelta
 import dbCreate
+import app
 def init_db():
     dbCreate.init_db()
 
@@ -17,7 +18,7 @@ def get_all_stores():
     cursor.close()
 
     store_names = [row[0] for row in result]
-    json_data = json.dumps(store_names)
+    json_data = json.dumps(store_names, ensure_ascii=False)
     return json_data
 
 # get store description
@@ -28,7 +29,7 @@ def get_store_text(storeName):
     result = cursor.fetchone()
     cursor.close()
 
-    return jsonify(result)
+    return json.dumps(result, ensure_ascii=False)
 
 # get store Image
 @db_bp.route('/storeInfo/<storeName>/image', methods = ['GET'])
@@ -42,6 +43,8 @@ def get_store_image(storeName):
 
     storeImageURL = result[0]
     imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_stores',storeImageURL)
+    if not os.path.exists(imagePath):
+        return None
     return send_file(imagePath, mimetype='image/jpeg')
 
 # get all menu names from a store
@@ -55,8 +58,7 @@ def get_all_menu(storeName):
     cursor.close()
 
     menu_names = [row[0] for row in result]
-    json_data = json.dumps(menu_names)
-    return json_data
+    return json.dumps(menu_names, ensure_ascii=False)
 
 # menu info
 @db_bp.route('/menuInfo/<storeName>/<menuName>/text', methods = ['GET'])
@@ -68,7 +70,7 @@ def get_menu_text(storeName, menuName):
     result = cursor.fetchone()
     cursor.close()
 
-    return jsonify(result)
+    return json.dumps(result, ensure_ascii=False)
 
 # menu image
 @db_bp.route('/menuInfo/<storeName>/<menuName>/image', methods = ['GET'])
@@ -140,7 +142,7 @@ def get_menu_options(storeName, menuName):
         group_dict[groupName]["fat"].append(fat)
 
     # JSON으로 반환
-    return jsonify(group_dict)
+    return json.dumps(group_dict, ensure_ascii=False)
 
 
 # 재현ai적용
@@ -200,7 +202,7 @@ def calc_nutrients(data):
             'carboHydrate': total_carbo,
             'fat': total_fat
         }   
-        return jsonify(result)
+        return  json.dumps(result, ensure_ascii=False)
     
     except Exception as e:
         return jsonify({"error": str(e)})
@@ -242,7 +244,7 @@ def get_all_reviews_text(storeName, menuName):
         "reviewImageURLs": reviewImageURLs,
         "reviewTexts": reviewTexts
     }
-    return jsonify(result)
+    return json.dumps(result, ensure_ascii=False)
 
 # 유저 리뷰 사진 불러오기
 @db_bp.route('/menuInfo/<storeName>/reviews/<reviewImageURL>', methods = ['GET'])
@@ -271,7 +273,7 @@ def get_order_info(userID):
         })
 
     # JSON으로 반환
-    return jsonify(record)
+    return json.dumps(record, ensure_ascii=False)
 
 # 유저 최근 30일 개수 조회하기
 @db_bp.route('/orderInfo/<userID>/oneMonthCount', methods = ['GET'])
