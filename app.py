@@ -200,13 +200,16 @@ def process_image():
     if image.filename == '':
         return 'No selected file', 400
     
-    filepath = os.path.join('JUNCTIONBREMEN/Nutrient_estimate', image.filename)
+    filepath = os.path.join('tempImage/', image.filename)
     image.save(filepath)
-    return run_ai()
+    return run_ai(filepath)
 
-def run_ai():
+def run_ai(filepath):
     # shoot to localhost
     url = 'http://127.0.0.1:5000/YOLO'
+    with open(filepath, 'rb') as file:
+        files = {'Image': file}
+        response = requests.post(url, files=files)
     response = requests.post(url)
     #data={"김치":13.2, "커피":123.0}
     return calc_nutrients(response.json())
