@@ -1,7 +1,5 @@
-from flask import Flask, jsonify, request, Response, Blueprint, send_file
-import requests
+from flask import jsonify, request, Blueprint, send_file
 import os
-import sys
 import json
 from datetime import datetime, timedelta
 import app
@@ -9,17 +7,67 @@ import app
 def init_db():
     # create initial table
     cursor = app.get_db().cursor()
-    sql_query='CREATE TABLE IF NOT EXISTS IngredientInfo (Ingredient TEXT,kcal REAL, salt REAL, protein REAL, carbohydrate REAL, fat REAL)'
+    sql_query='''
+    CREATE TABLE IF NOT EXISTS IngredientInfo (
+        Ingredient TEXT,
+        kcal REAL, 
+        salt REAL, 
+        protein REAL, 
+        carbohydrate REAL, 
+        fat REAL
+    )'''
     cursor.execute(sql_query)
-    sql_query='CREATE TABLE IF NOT EXISTS MenuInfo (storeName TEXT,menuName TEXT,optionName TEXT,description TEXT,menuType TEXT,kcal INTEGER,salt INTEGER,protein INTEGER,carbohydrate INTEGER,fat INTEGER,menuImageURL TEXT, price INTEGER)'
+    sql_query='''
+    CREATE TABLE IF NOT EXISTS MenuInfo (
+        storeName TEXT,
+        menuName TEXT,
+        optionName TEXT,
+        description TEXT,
+        menuType TEXT,
+        kcal INTEGER,
+        salt INTEGER,
+        protein INTEGER,
+        carbohydrate INTEGER,
+        fat INTEGER,
+        menuImageURL TEXT, 
+        price INTEGER
+    )'''
     cursor.execute(sql_query)
-    sql_query='CREATE TABLE IF NOT EXISTS MenuOptionInfo (storeName TEXT, menuName TEXT, optionName TEXT, groupName TEXT)'
+    sql_query='''CREATE TABLE IF NOT EXISTS MenuOptionInfo (
+        storeName TEXT, 
+        menuName TEXT, 
+        optionName TEXT, 
+        groupName TEXT
+    )'''
     cursor.execute(sql_query)
-    sql_query='CREATE TABLE IF NOT EXISTS GroupInfo (storeName TEXT, menuName TEXT, groupName TEXT, groupType TEXT, groupMin INTEGER, groupMax INTEGER)'
+    sql_query='''CREATE TABLE IF NOT EXISTS GroupInfo (
+        storeName TEXT, 
+        menuName TEXT, 
+        groupName TEXT, 
+        groupType TEXT, 
+        groupMin INTEGER, 
+        groupMax INTEGER
+    )'''
     cursor.execute(sql_query)
-    sql_query='CREATE TABLE IF NOT EXISTS StoreInfo (storeName TEXT, description TEXT, storeImageURL TEXT, latitude REAL, longitude REAL, preference REAL)'
+    sql_query='''CREATE TABLE IF NOT EXISTS StoreInfo (
+        storeName TEXT, 
+        description TEXT, 
+        storeImageURL TEXT, 
+        latitude REAL, 
+        longitude REAL, 
+        preference REAL
+    )'''
     cursor.execute(sql_query)
-    sql_query='CREATE TABLE IF NOT EXISTS OrderInfo (dateTime TEXT, userID INTEGER, storeName TEXT, menuName TEXT, stars INTEGER, isReviewed INTEGER, reviewImageURL TEXT, reviewText TEXT)'
+    sql_query='''CREATE TABLE IF NOT EXISTS OrderInfo (
+        dateTime TEXT, 
+        userID INTEGER, 
+        storeName TEXT, 
+        menuName TEXT, 
+        stars INTEGER, 
+        isReviewed INTEGER, 
+        reviewImageURL TEXT, 
+        reviewText TEXT
+    )'''
     cursor.execute(sql_query)
     app.get_db().commit()
     cursor.close()
@@ -27,33 +75,38 @@ def init_db():
 
 db_bp = Blueprint('db_bp', __name__, url_prefix='/')
 
-# get all stores in db
+# get all stores information
 @db_bp.route('/storeInfo/', methods = ['GET'])
 def get_all_stores():
     cursor = app.get_db().cursor()
     cursor.execute("SELECT storeName FROM StoreInfo")
     result = cursor.fetchall()
     cursor.close()
+
     store_names = [row[0] for row in result]
     json_data = json.dumps(store_names)
     return json_data
 
-# store Text
+# get store description
 @db_bp.route('/storeInfo/<storeName>/text', methods = ['GET'])
 def get_store_text(storeName):
     cursor = app.get_db().cursor()
     cursor.execute("SELECT description FROM StoreInfo WHERE storeName=?", (storeName,))
     result = cursor.fetchone()
     cursor.close()
+
     return jsonify(result)
 
-# store Image
+# get store Image
 @db_bp.route('/storeInfo/<storeName>/image', methods = ['GET'])
 def get_store_image(storeName):
     cursor = app.get_db().cursor()
-    cursor.execute("SELECT storeImageURL FROM StoreInfo WHERE storeName=?", (storeName,))
+    cursor.execute("SELECT storeImageURL \
+                   FROM StoreInfo \
+                   WHERE storeName=?", (storeName,))
     result = cursor.fetchone()
     cursor.close()
+
     storeImageURL = result[0]
     imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_stores',storeImageURL)
     return send_file(imagePath, mimetype='image/jpeg')
@@ -62,9 +115,12 @@ def get_store_image(storeName):
 @db_bp.route('/menuInfo/<storeName>', methods = ['GET'])
 def get_all_menu(storeName):
     cursor = app.get_db().cursor()
-    cursor.execute("SELECT menuName FROM MenuInfo WHERE storeName=?", (storeName,))
+    cursor.execute("SELECT menuName \
+                   FROM MenuInfo \
+                   WHERE storeName=?", (storeName,))
     result = cursor.fetchall()
     cursor.close()
+
     menu_names = [row[0] for row in result]
     json_data = json.dumps(menu_names)
     return json_data
@@ -73,16 +129,21 @@ def get_all_menu(storeName):
 @db_bp.route('/menuInfo/<storeName>/<menuName>/text', methods = ['GET'])
 def get_menu_text(storeName, menuName):
     cursor = app.get_db().cursor()
-    cursor.execute("SELECT menuName, description, kcal, salt, protein, carbohydrate, fat, price FROM MenuInfo WHERE storeName=? AND menuName=? AND optionName='default'", (storeName,menuName,))
+    cursor.execute("SELECT menuName, description, kcal, salt, protein, carbohydrate, fat, price \
+                   FROM MenuInfo \
+                   WHERE storeName=? AND menuName=? AND optionName='default'", (storeName,menuName,))
     result = cursor.fetchone()
     cursor.close()
+
     return jsonify(result)
 
 # menu image
 @db_bp.route('/menuInfo/<storeName>/<menuName>/image', methods = ['GET'])
 def get_menu_image(storeName, menuName):
     cursor = app.get_db().cursor()
-    cursor.execute("SELECT menuImageURL FROM MenuInfo WHERE storeName=? AND menuName=?", (storeName,menuName,))
+    cursor.execute("SELECT menuImageURL \
+                   FROM MenuInfo \
+                   WHERE storeName=? AND menuName=?", (storeName,menuName,))
     result = cursor.fetchone()
     cursor.close()
     menuImageURL = result[0]
@@ -90,58 +151,26 @@ def get_menu_image(storeName, menuName):
     return send_file(imagePath, mimetype='image/jpeg')
 
 # option group info
-# example output
-"""
-{
-    "groupName1": {
-        "options": ["option1", "option2", "option3"],
-        "prices" : [0, 1000, 2000]
-        "kcal": [10, 20, 30],
-        "salt": [10, 20, 30],
-        "protein": [1, 2, 3],
-        "carbohydrate": [5, 6, 7],
-        "fat": [8, 9, 10],
-        "groupType": "checkbox"
-        "groupText": "최소 1개부터 3개까지 선택해 주세요",
-        "groupMin":1,
-        "groupMax":3
-    },
-    "groupName2": {
-        "options": ["option4", "option5"],
-        "prices" : [0, 1000, 2000]
-        ...
-        "groupType": "radiobutton"
-        "groupText": "하나를 선택해 주세요",
-        "groupMin": 1,
-        "groupMax": 1
-    }
-}
-"""
 @db_bp.route('/menuInfo/<storeName>/<menuName>/options', methods = ['GET'])
 def get_menu_options(storeName, menuName):
     cursor = app.get_db().cursor()
     cursor.execute("""
         SELECT 
-            g.groupName, 
-            g.groupType, 
-            g.groupMin, 
-            g.groupMax,
+            g.groupName,  g.groupType, g.groupMin, g.groupMax,
             o.optionName, 
-            m.price,
-            m.kcal,
-            m.salt,
-            m.protein,
-            m.carbohydrate,
-            m.fat
+            m.price,m.kcal,m.salt,m.protein, m.carbohydrate,m.fat
         FROM 
             GroupInfo g
         JOIN 
-            MenuOptionInfo o ON g.groupName = o.groupName AND g.storeName = o.storeName AND g.menuName = o.menuName
+            MenuOptionInfo o ON g.groupName = o.groupName 
+                            AND g.storeName = o.storeName 
+                            AND g.menuName = o.menuName
         JOIN 
-            MenuInfo m ON g.storeName = m.storeName AND g.menuName = m.menuName AND o.optionName = m.optionName
+            MenuInfo m  ON g.storeName = m.storeName 
+                        AND g.menuName = m.menuName 
+                        AND o.optionName = m.optionName
         WHERE 
-            g.storeName = ? AND g.menuName = ?;
-        """, (storeName, menuName))
+            g.storeName = ? AND g.menuName = ?""", (storeName, menuName))
     groups = cursor.fetchall()
     cursor.close()
     group_dict = {}
@@ -201,18 +230,18 @@ def run_ai(image):
 
 
 # 음식의 구성 성분에 따른 영양성분 얻어오기
-# input: "토마토 파스타"
-# output: kcal, salt, protein, carbohydrate, fat
+# input: "토마토 파스타", output: kcal, salt, protein, carbohydrate, fat
 def get_nutrients_info(product_name):
     cursor = app.get_db().cursor()
-    cursor.execute("SELECT kcal, salt, protein, carbohydrate, fat FROM IngredientInfo WHERE Ingredient=?", (product_name,))
+    cursor.execute("SELECT kcal, salt, protein, carbohydrate, fat \
+                   FROM IngredientInfo \
+                   WHERE Ingredient=?", (product_name,))
     result = cursor.fetchone()
     cursor.close()
     return result
 
 # 음식의 구성 성분 부피 목록에 따른 총 영양성분 얻어오기
-# input: "토마토 파스타":100, "콜라":150
-# output: kcal, salt, protein, carbohydrate, fat
+# input: "토마토 파스타":100, "콜라":150, output: kcal, salt, protein, carbohydrate, fat
 def calc_nutrients(data):
     try:
         # data = request.get_json()
@@ -248,7 +277,8 @@ def calc_nutrients(data):
 @db_bp.route('/menuInfo/<storeName>/reviews/text', methods = ['GET'])
 def get_all_reviews_text(storeName, menuName):
     cursor = app.get_db().cursor()
-    cursor.execute("SELECT * FROM OrderInfo WHERE storeName=? AND menuName=?", (storeName,menuName,))
+    cursor.execute("SELECT * FROM OrderInfo \
+                   WHERE storeName=? AND menuName=?", (storeName,menuName,))
     reviews = cursor.fetchall()
     cursor.close()
     
@@ -279,7 +309,6 @@ def get_all_reviews_text(storeName, menuName):
         "reviewImageURLs": reviewImageURLs,
         "reviewTexts": reviewTexts
     }
-    
     return jsonify(result)
 
 # 유저 리뷰 사진 불러오기
@@ -289,11 +318,13 @@ def get_review_image(reviewImageURL):
     imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_reviews',reviewImage)
     return send_file(imagePath, mimetype='image/jpeg')
 
+
 # 유저 기록 조회하기
 @db_bp.route('/orderInfo/<userID>', methods = ['GET'])
 def get_order_info(userID):
     cursor = app.get_db().cursor()
-    cursor.execute("SELECT dateTime, storeName,	menuName, stars FROM OrderInfo WHERE userID=?",(userID,))
+    cursor.execute("SELECT dateTime, storeName,	menuName, stars \
+                   FROM OrderInfo WHERE userID=?",(userID,))
     result = cursor.fetchall()
     cursor.close()
     record = []
@@ -316,7 +347,8 @@ def get_one_month_count(userID):
     thirty_days_ago = datetime.now() - timedelta(days=30)
     thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
 
-    cursor.execute("SELECT COUNT(*) FROM OrderInfo WHERE dateTime >= ?", (thirty_days_ago_str,))
+    cursor.execute("SELECT COUNT(*) FROM OrderInfo \
+                   WHERE dateTime >= ?", (thirty_days_ago_str,))
     count = cursor.fetchone()[0]
     cursor.close()
     return jsonify({"count": count})

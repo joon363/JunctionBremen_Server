@@ -1,19 +1,16 @@
-from flask import Flask, g, jsonify, request, Response
+from flask import Flask, g
 import sqlite3
-import requests
-
 import dbviews
 import chatbotviews
-import defaultviews
 
+# register views
 app = Flask(__name__)
-app.register_blueprint(defaultviews.default_bp)
 app.register_blueprint(dbviews.db_bp)
 app.register_blueprint(chatbotviews.chat_bp)
 
-# DB functions
-DATABASE = '/dbmodule/database.db'
-#
+# DB connection
+DATABASE = 'dbmodule/database.db'
+
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
@@ -34,3 +31,7 @@ def close_connection(exception):
 with app.app_context():
   print("db init")
   dbviews.init_db()
+
+@app.route('/')
+def home():
+  return 'Hello, this is the home page!'
