@@ -500,4 +500,6 @@ with app.app_context():
 
     
 if __name__ == '__main__':
+    print("public API server")
     app.run( port=80, debug= True, host = '0.0.0.0')
+
