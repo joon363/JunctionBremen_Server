@@ -4,7 +4,6 @@ import os
 import sys
 import json
 from datetime import datetime, timedelta
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import app
 
 def init_db():
@@ -56,7 +55,7 @@ def get_store_image(storeName):
     result = cursor.fetchone()
     cursor.close()
     storeImageURL = result[0]
-    imagePath = os.path.join(os.path.dirname(__file__), 'staticdata',storeImageURL)
+    imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_stores',storeImageURL)
     return send_file(imagePath, mimetype='image/jpeg')
 
 # get all menu names from a store
@@ -69,9 +68,6 @@ def get_all_menu(storeName):
     menu_names = [row[0] for row in result]
     json_data = json.dumps(menu_names)
     return json_data
-    # column_names = ['menuName']
-    # menus = [dict(zip(column_names, menu)) for menu in result]
-    # return jsonify(menus)
 
 # menu info
 @db_bp.route('/menuInfo/<storeName>/<menuName>/text', methods = ['GET'])
@@ -90,7 +86,7 @@ def get_menu_image(storeName, menuName):
     result = cursor.fetchone()
     cursor.close()
     menuImageURL = result[0]
-    imagePath = os.path.join(os.path.dirname(__file__), 'staticdata_menus',menuImageURL)
+    imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_stores',menuImageURL)
     return send_file(imagePath, mimetype='image/jpeg')
 
 # option group info
@@ -154,7 +150,7 @@ def get_menu_options(storeName, menuName):
 
         group_text = ""
         if groupType=="checkbox":
-            group_text='최소 {0}개부터 {1}개까지 선택해 주세요'.format(group_Min,group_Max)
+            group_text='최소 {0}개부터 {1}개까지 선택해 주세요'.format(groupMin,groupMax)
         else:
             group_text='하나를 선택해 주세요'
 
@@ -290,7 +286,7 @@ def get_all_reviews_text(storeName, menuName):
 @db_bp.route('/menuInfo/<storeName>/reviews/<reviewImageURL>', methods = ['GET'])
 def get_review_image(reviewImageURL):
     reviewImage = reviewImageURL
-    imagePath = os.path.join(os.path.dirname(__file__), 'staticdata_reviews',reviewImage)
+    imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_reviews',reviewImage)
     return send_file(imagePath, mimetype='image/jpeg')
 
 # 유저 기록 조회하기
@@ -315,7 +311,7 @@ def get_order_info(userID):
 
 # 유저 최근 30일 개수 조회하기
 @db_bp.route('/orderInfo/<userID>/oneMonthCount', methods = ['GET'])
-def get_order_info(userID):
+def get_one_month_count(userID):
     cursor = app.get_db().cursor()
     thirty_days_ago = datetime.now() - timedelta(days=30)
     thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')

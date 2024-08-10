@@ -2,19 +2,18 @@ from flask import Flask, g, jsonify, request, Response
 import sqlite3
 import requests
 
-from mymodule.dbmodule import dbviews
-from mymodule.aimodule import chatbotviews
-from myviews import requestviews, defaultviews
+import dbviews
+import chatbotviews
+import defaultviews
 
 app = Flask(__name__)
-app.register_blueprint(requestviews.request_bp)
 app.register_blueprint(defaultviews.default_bp)
 app.register_blueprint(dbviews.db_bp)
 app.register_blueprint(chatbotviews.chat_bp)
 
 # DB functions
-DATABASE = 'mymodule/dbmodule/database.db'
-
+DATABASE = '/dbmodule/database.db'
+#
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
