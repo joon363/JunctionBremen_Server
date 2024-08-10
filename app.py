@@ -210,8 +210,6 @@ def run_ai(filepath):
     with open(filepath, 'rb') as file:
         files = {'Image': file}
         response = requests.post(url, files=files)
-    response = requests.post(url)
-    #data={"김치":13.2, "커피":123.0}
     return calc_nutrients(response.json())
 
 
