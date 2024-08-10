@@ -4,8 +4,6 @@ import sqlite3
 import chatbotviews
 import os
 import json
-import numpy
-import cv2
 from datetime import datetime, timedelta
 
 # register views
