@@ -100,7 +100,7 @@ def get_menu_image(storeName, menuName):
         return Response(status=204)
 
     menuImageURL = result[0]
-    imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_stores', menuImageURL)
+    imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_menus', menuImageURL)
     if not os.path.exists(imagePath) or os.path.getsize(imagePath) == 0:
         return Response(status=204)
 
