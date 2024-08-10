@@ -1,9 +1,10 @@
-from flask import jsonify, request, Blueprint, send_file
+from flask import jsonify, request, Blueprint, send_file, Response
 import os
 import json
 from datetime import datetime, timedelta
 import dbCreate
 import app
+
 def init_db():
     dbCreate.init_db()
 
@@ -41,10 +42,14 @@ def get_store_image(storeName):
     result = cursor.fetchone()
     cursor.close()
 
+    if result is None or not result[0]:
+        return Response(status=204)
+
     storeImageURL = result[0]
-    imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_stores',storeImageURL)
-    if not os.path.exists(imagePath):
-        return None
+    imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_stores', storeImageURL)
+    if not os.path.exists(imagePath) or os.path.getsize(imagePath) == 0:
+        return Response(status=204)
+
     return send_file(imagePath, mimetype='image/jpeg')
 
 # get all menu names from a store
@@ -69,8 +74,17 @@ def get_menu_text(storeName, menuName):
                    WHERE storeName=? AND menuName=? AND optionName='default'", (storeName,menuName,))
     result = cursor.fetchone()
     cursor.close()
-
-    return json.dumps(result, ensure_ascii=False)
+    menu_info = {
+        "menuName": result[0],
+        "description": result[1],
+        "kcal": result[2],
+        "salt": result[3],
+        "protein": result[4],
+        "carbohydrate": result[5],
+        "fat": result[6],
+        "price": result[7]
+    }
+    return json.dumps(menu_info, ensure_ascii=False)
 
 # menu image
 @db_bp.route('/menuInfo/<storeName>/<menuName>/image', methods = ['GET'])
@@ -81,8 +95,15 @@ def get_menu_image(storeName, menuName):
                    WHERE storeName=? AND menuName=?", (storeName,menuName,))
     result = cursor.fetchone()
     cursor.close()
+
+    if result is None or not result[0]:
+        return Response(status=204)
+
     menuImageURL = result[0]
-    imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_stores',menuImageURL)
+    imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_stores', menuImageURL)
+    if not os.path.exists(imagePath) or os.path.getsize(imagePath) == 0:
+        return Response(status=204)
+
     return send_file(imagePath, mimetype='image/jpeg')
 
 # option group info
@@ -144,10 +165,10 @@ def get_menu_options(storeName, menuName):
     # JSON으로 반환
     return json.dumps(group_dict, ensure_ascii=False)
 
-
 # 재현ai적용
-@db_bp.route('/imageAI/processImage', methods=['POST'])
+@db_bp.route('/imageAI/processImage', methods=['GET']) #post
 def process_image():
+    return run_ai(3)
     if 'image' not in request.files:
         return 'No image part', 400
 
@@ -160,7 +181,7 @@ def process_image():
 def run_ai(image):
     # python code
     # ai 들어가는곳
-    data={"coke":13.2, "suka":123.0}
+    data={"김치":13.2, "커피":123.0}
     return calc_nutrients(data)
 
 
@@ -196,11 +217,11 @@ def calc_nutrients(data):
                 total_fat += fat * volume
 
         result = {
-            'kcal': total_kcal,
-            'salt': total_salt,
-            'protein': total_protein,
-            'carboHydrate': total_carbo,
-            'fat': total_fat
+            'kcal': int(total_kcal),
+            'salt': int(total_salt),
+            'protein': int(total_protein),
+            'carboHydrate': int(total_carbo),
+            'fat': int(total_fat)
         }   
         return  json.dumps(result, ensure_ascii=False)
     
@@ -209,11 +230,11 @@ def calc_nutrients(data):
 
 
 # 유저 리뷰 모아보기
-@db_bp.route('/menuInfo/<storeName>/reviews/text', methods = ['GET'])
-def get_all_reviews_text(storeName, menuName):
+@db_bp.route('/reviews/<storeName>/text', methods = ['GET'])
+def get_all_reviews_text(storeName):
     cursor = app.get_db().cursor()
     cursor.execute("SELECT * FROM OrderInfo \
-                   WHERE storeName=? AND menuName=?", (storeName,menuName,))
+                   WHERE storeName=?", (storeName,))
     reviews = cursor.fetchall()
     cursor.close()
     
@@ -247,10 +268,14 @@ def get_all_reviews_text(storeName, menuName):
     return json.dumps(result, ensure_ascii=False)
 
 # 유저 리뷰 사진 불러오기
-@db_bp.route('/menuInfo/<storeName>/reviews/<reviewImageURL>', methods = ['GET'])
+@db_bp.route('/reviews/<reviewImageURL>', methods = ['GET'])
 def get_review_image(reviewImageURL):
     reviewImage = reviewImageURL
-    imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_reviews',reviewImage)
+    imagePath = os.path.join(os.path.dirname(__file__), 'static', 'staticdata_reviews', reviewImage)
+
+    if not os.path.exists(imagePath) or os.path.getsize(imagePath) == 0:
+        return Response(status=204)
+
     return send_file(imagePath, mimetype='image/jpeg')
 
 
@@ -265,7 +290,7 @@ def get_order_info(userID):
     record = []
     for row in result:
         dateTime, storeName, menuName, stars = row
-        result.append({
+        record.append({
             "dateTime": dateTime,
             "storeName": storeName,
             "menuName": menuName,
@@ -283,7 +308,7 @@ def get_one_month_count(userID):
     thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
 
     cursor.execute("SELECT COUNT(*) FROM OrderInfo \
-                   WHERE dateTime >= ?", (thirty_days_ago_str,))
+                   WHERE dateTime >= ? AND userID=?", (thirty_days_ago_str,userID,))
     count = cursor.fetchone()[0]
     cursor.close()
     return jsonify({"count": count})
