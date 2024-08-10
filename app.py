@@ -190,7 +190,7 @@ def get_menu_options(storeName, menuName):
     return json.dumps(group_dict, ensure_ascii=False)
 
 # 재현ai적용
-@app.route('/imageAI/processImage', methods=['GET']) #post
+@app.route('/imageAI/processImage', methods=['POST'])
 def process_image():
     if 'image' not in request.files:
         return 'No image part', 400
