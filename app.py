@@ -1,9 +1,11 @@
 from flask import Flask, g, jsonify, request, Blueprint, send_file, Response
-
+import requests
 import sqlite3
 import chatbotviews
 import os
 import json
+import numpy
+import cv2
 from datetime import datetime, timedelta
 
 # register views
@@ -192,7 +194,6 @@ def get_menu_options(storeName, menuName):
 # 재현ai적용
 @app.route('/imageAI/processImage', methods=['GET']) #post
 def process_image():
-    return run_ai(3)
     if 'image' not in request.files:
         return 'No image part', 400
 
@@ -200,13 +201,17 @@ def process_image():
 
     if image.filename == '':
         return 'No selected file', 400
-    return run_ai(image)
+    
+    filepath = os.path.join('JUNCTIONBREMEN/Nutrient_estimate', image.filename)
+    image.save(filepath)
+    return run_ai()
 
-def run_ai(image):
-    # python code
-    # ai 들어가는곳
-    data={"김치":13.2, "커피":123.0}
-    return calc_nutrients(data)
+def run_ai():
+    # shoot to localhost
+    url = 'http://127.0.0.1:5000/YOLO'
+    response = requests.post(url)
+    #data={"김치":13.2, "커피":123.0}
+    return calc_nutrients(response.json())
 
 
 # 음식의 구성 성분에 따른 영양성분 얻어오기
@@ -379,6 +384,20 @@ def insert_dummy():
         ('커피', 2, 0, 0.3, 0, 0),
         ('우유', 42, 0.1, 3.4, 4.9, 1.0)
     ]
+    ingredients_data = {
+        "bulgogi": {"Carbohydrate": 0.2, "Protein": 2.3, "Fat": 4.5, "Sodium": 300},
+        "kimchi": {"Carbohydrate": 1.0, "Protein": 0.5, "Fat": 0.2, "Sodium": 600},
+        "meat": {"Carbohydrate": 0.0, "Protein": 3.0, "Fat": 5.0, "Sodium": 60},
+        "noodle": {"Carbohydrate": 0.7, "Protein": 0.2, "Fat": 0.5, "Sodium": 5},
+        "plate": {"Carbohydrate": 0.0, "Protein": 0.0, "Fat": 0.0, "Sodium": 0},
+        "potato": {"Carbohydrate": 0.2, "Protein": 0.1, "Fat": 0.0, "Sodium": 5},
+        "pumpkin": {"Carbohydrate": 0.3, "Protein": 0.1, "Fat": 0.0, "Sodium": 1},
+        "rice": {"Carbohydrate": 0.3, "Protein": 0.1, "Fat": 0.0, "Sodium": 1},
+        "salad": {"Carbohydrate": 0.5, "Protein": 0.2, "Fat": 0.1, "Sodium": 50},
+        "scramble": {"Carbohydrate": 0.5, "Protein": 2.0, "Fat": 4.0, "Sodium": 150},
+        "soup": {"Carbohydrate": 0.8, "Protein": 0.5, "Fat": 1.0, "Sodium": 400},
+        "tofu": {"Carbohydrate": 1.0, "Protein": 2.0, "Fat": 2.0, "Sodium": 5}
+    }
     tables = ['MenuInfo', 'MenuOptionInfo', 'GroupInfo', 'StoreInfo', 'OrderInfo', 'IngredientInfo']
     empty_tables = []
     for table in tables:
@@ -476,7 +495,7 @@ def init_db():
     cursor.close()
     insert_dummy()
     print("db init complete")
-    
+
 # initialize
 with app.app_context():
     init_db()

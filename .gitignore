@@ -264,7 +264,8 @@ pyrightconfig.json
 bremen_key_pem.pem
 
 # database
-mymodule/dbmodule/database.db
+dbmodule/database.db
+JUNCTIONBREMEN
 
 
 # End of https://www.toptal.com/developers/gitignore/api/python,flask
