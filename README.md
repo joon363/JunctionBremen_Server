@@ -10,5 +10,5 @@ end venv:
    window: venv/Scripts/deactivate
    ubunt: deactivate
 
-after any update
-pip freeze > requirements.txt
+after any update, INSIDE THE VENV, do this:
+pip freeze > requirements.txt 
