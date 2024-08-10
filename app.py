@@ -206,7 +206,7 @@ def process_image():
 
 def run_ai(filepath):
     # shoot to localhost
-    url = 'http://127.0.0.1:5000/YOLO'
+    url = 'http://192.168.101.110:5000/YOLO'
     with open(filepath, 'rb') as file:
         files = {'Image': file}
         response = requests.post(url, files=files)
