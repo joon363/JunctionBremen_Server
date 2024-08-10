@@ -11,6 +11,8 @@ chat_bp = Blueprint('chat_bp', __name__, url_prefix='/')
 def home():
   return 'Hello, this is chatbot page!'
 
+
+# 질문답변
 @chat_bp.route('/chatbot/prompt', methods=['POST'])
 def generate_answer():
     if request.method == 'POST':
