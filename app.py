@@ -35,3 +35,6 @@ with app.app_context():
 @app.route('/')
 def home():
   return 'Hello, this is the home page!'
+
+if __name__ == '__main__':
+    app.run( port=80, debug= True, host = '0.0.0.0')
