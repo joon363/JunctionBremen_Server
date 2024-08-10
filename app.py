@@ -33,8 +33,6 @@ def close_connection(exception):
 def home():
   return 'Hello, this is the home page!'
 
-if __name__ == '__main__':
-    app.run( port=80, debug= True, host = '0.0.0.0')
 
 # get all stores information
 @app.route('/storeInfo/', methods = ['GET'])
@@ -478,6 +476,11 @@ def init_db():
     cursor.close()
     insert_dummy()
     print("db init complete")
+    
 # initialize
 with app.app_context():
     init_db()
+
+    
+if __name__ == '__main__':
+    app.run( port=80, debug= True, host = '0.0.0.0')
