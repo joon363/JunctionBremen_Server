@@ -209,7 +209,9 @@ def run_ai(filepath):
     url = 'http://192.168.101.110:5000/YOLO'
     with open(filepath, 'rb') as file:
         files = {'Image': file}
+        print("ready to send request")
         response = requests.post(url, files=files)
+        print("got response from local server")
     return calc_nutrients(response.json())
 
 
